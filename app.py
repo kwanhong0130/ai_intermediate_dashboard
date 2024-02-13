@@ -142,8 +142,8 @@ def fetch_data(url, acc_org_id):
 
     response = requests.get(url, headers=headers)
     res_json = response.json()
-    logger.info(res_json)
-    logger.info(response.reason)
+    # logger.info(res_json)
+    # logger.info(response.reason)
     # Check the response status code
     if res_json['_result']['status'] == 'ok':
         # Response was successful, print the response content
@@ -179,28 +179,26 @@ def _get_stats_result():
 
         # Process the results
         for result in report_req_results:
-            logger.info(f"{result[0]} : {result[1]}")
+            logger.info(f"Download token : org id {result[0]} : {result[1]}")
 
 
     progress_text = "요청한 리포트 파일의 생성과 다운로드를 진행중입니다. 🏄‍♂️"
     my_bar = st.progress(0, text=progress_text)
 
     for percent_complete in range(100):
-        time.sleep(0.25)
+        time.sleep(0.2)
         my_bar.progress(percent_complete + 1, text=progress_text)
 
     # down_report_file_name = f"report_organization_{org_id}_{formatted_now_date}.xlsx"
     # It takes a while creating blob file
     # report_blob_url = get_remote_file(remote_file_endpoint, api_sessionkey, report_download_token)
 
-    # logger.info(report_blob_url)
-
     credit_usages = {}
 
-    for result in report_req_results:
-        if result[0] is not None:
-            down_report_file_name = f"report_organization_{result[1]}_{formatted_now_date}.xlsx"
-            report_blob_url = get_remote_file(remote_file_endpoint, api_sessionkey, result[0])
+    def _cal_credit_usage(report_req_result):
+        if report_req_result[0] is not None:
+            down_report_file_name = f"report_organization_{report_req_result[1]}_{formatted_now_date}.xlsx"
+            report_blob_url = get_remote_file(remote_file_endpoint, api_sessionkey, report_req_result[0])
 
             if report_blob_url is not None:
                 response = requests.get(report_blob_url)
@@ -212,18 +210,58 @@ def _get_stats_result():
                     logger.error("Error: " + response.reason)
 
             credit_usage = cal_credit_usage_stats(down_report_file_name)
-            credit_usages[str(result[1])] = credit_usage
+            # credit_usages[str(report_req_result[1])] = credit_usage
         else:
-            credit_usages[str(result[1])] = 0
+            credit_usage = 0
+            # credit_usages[str(report_req_result[1])] = 0
+        
+        return report_req_result[1], credit_usage
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        # Submit API calls concurrently
+        futures = [executor.submit(_cal_credit_usage, result) for result in report_req_results]
+
+        # Wait for all results
+        credit_usage_results = [future.result() for future in concurrent.futures.as_completed(futures)]
+
+        # Process the results
+        for credit_usage_result in credit_usage_results:
+            credit_usages[str(credit_usage_result[0])] = credit_usage_result[1]
+
+    # for result in report_req_results:
+    #     if result[0] is not None:
+    #         down_report_file_name = f"report_organization_{result[1]}_{formatted_now_date}.xlsx"
+    #         report_blob_url = get_remote_file(remote_file_endpoint, api_sessionkey, result[0])
+
+    #         if report_blob_url is not None:
+    #             response = requests.get(report_blob_url)
+    #             if response.status_code == 200:
+    #                 with open(down_report_file_name, "wb") as f:
+    #                     f.write(response.content)
+    #                     logger.info("Report file is written as file")
+    #             else:
+    #                 logger.error("Error: " + response.reason)
+
+    #         credit_usage = cal_credit_usage_stats(down_report_file_name)
+    #         credit_usages[str(result[1])] = credit_usage
+    #     else:
+    #         credit_usages[str(result[1])] = 0
 
     return credit_usages
 
 
 st.set_page_config(
-    page_title = 'LG Intermediate Course 대시보드',
+    page_title = '2024 LG Intermediate Course 대시보드',
     page_icon = '📊',
     layout = 'wide'
 )
+
+st.markdown("""
+<style>
+div.stButton > button:first-child {
+background-color: #A961DC; color:white;
+}
+</style>""", unsafe_allow_html=True)
 
 # dashboard title
 st.title("2024 LG Intermediate Course 크레딧 대시보드")
@@ -266,11 +304,6 @@ if st.button("대시보드 활성화 ✅"):
             arranged_credit_usages = []
             for org_id in account_ids:
                 arranged_credit_usages.append(credit_usages[str(org_id)])
-
-            # logger.info(account_names)
-            # logger.info(account_ids)
-            # logger.info(credit_usages)
-            # logger.info(arranged_credit_usages)
 
             result_df = pd.DataFrame({
                 "Account": account_names,
