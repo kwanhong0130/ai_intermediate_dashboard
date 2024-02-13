@@ -1,6 +1,7 @@
 streamlit
 streamlit-extras
 numpy
+openpyxl
 pandas
 plotly
 pytz
