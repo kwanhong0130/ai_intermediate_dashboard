@@ -157,7 +157,7 @@ def _get_stats_result():
     # duration_filter_cond = json.dumps({"$and":[{"begin_datetime":1672498800000},
                                             #    {"end_datetime":1704034800000}]}) # 2023
     duration_filter_cond = json.dumps({"$and":[{"begin_datetime":1704034800000},
-                                               {"end_datetime":1735657200000}]}) # 2024
+                                               {"end_datetime":1735657200000}]}) # 2024.01.01 ~ 2024.12.31
     # report_download_token = request_track_report(course_report_endpoint, api_sessionkey, org_id,
                                                 #  filter_cond=duration_filter_cond)
     # logger.info("Download token is: " + report_download_token)
@@ -166,6 +166,11 @@ def _get_stats_result():
 
     for key in lg_account_ids.keys():
         account_org_id = lg_account_ids[key]['org_id']
+        # if lg-innotek, change duration_filter_cond
+        # 2023.12.01 ~ 2025.01.01 {"$and":[{"begin_datetime":1701356400000},{"end_datetime":1735657200000}]}
+        if account_org_id == 1038:
+            duration_filter_cond = json.dumps({"$and":[{"begin_datetime":1701356400000},
+                                                       {"end_datetime":1735657200000}]})
         params = f"?organization_id={account_org_id}&filter_conditions={duration_filter_cond}"
         course_report_req_url = base_url+course_report_endpoint+params
         course_report_req_urls.append((course_report_req_url, account_org_id))
