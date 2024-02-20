@@ -252,6 +252,8 @@ def _get_stats_result():
     #     else:
     #         credit_usages[str(result[1])] = 0
 
+    my_bar.empty()
+
     return credit_usages
 
 
@@ -274,6 +276,22 @@ st.title("2024 LG Intermediate Course 크레딧 대시보드")
 if st.button("대시보드 활성화 ✅"): 
     st.session_state.disabled = True
     credit_usages = _get_stats_result()
+
+    account_names = []
+    account_ids = []
+    for lg_account in lg_account_ids.values():
+        account_names.append(lg_account['name'])
+        account_ids.append(lg_account['org_id'])
+
+    arranged_credit_usages = []
+    for org_id in account_ids:
+        arranged_credit_usages.append(credit_usages[str(org_id)])
+
+    result_df = pd.DataFrame({
+        "Account": account_names,
+        "Credit_Usage": arranged_credit_usages # [100] * len(lg_account_ids)
+    })
+
     with st.container():
         col1, col2 = st.columns(2)
 
@@ -286,6 +304,8 @@ if st.button("대시보드 활성화 ✅"):
             for credit in credit_usages.values():
                 current_credit += credit
             st.metric(label="사용 크레딧/총 크레딧", value=f"{current_credit}/5,000")
+
+            st.dataframe(result_df, use_container_width=True)
 
         with col2:
             st.subheader("그룹사 별 크레딧 사용현황")
@@ -300,21 +320,6 @@ if st.button("대시보드 활성화 ✅"):
             # )
             # st.bar_chart(chart_data, x="그룹사", y="크레딧 소진 수", color="color")
 
-            account_names = []
-            account_ids = []
-            for lg_account in lg_account_ids.values():
-                account_names.append(lg_account['name'])
-                account_ids.append(lg_account['org_id'])
-
-            arranged_credit_usages = []
-            for org_id in account_ids:
-                arranged_credit_usages.append(credit_usages[str(org_id)])
-
-            result_df = pd.DataFrame({
-                "Account": account_names,
-                "Credit_Usage": arranged_credit_usages # [100] * len(lg_account_ids)
-            })
-
             fig = px.bar(
                 result_df,
                 x="Account",
@@ -324,6 +329,6 @@ if st.button("대시보드 활성화 ✅"):
                 color = "Credit_Usage", 
                 color_continuous_scale = 'viridis'
             )
-            st.plotly_chart(fig)
+            st.plotly_chart(fig, use_container_width=True)
             
 else: st.info("🔼 [대시보드 활성화 ✅] 버튼을 눌러주세요.")
