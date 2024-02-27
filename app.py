@@ -57,11 +57,6 @@ auth_post_data = {
     "password": "Younha486!!@@"
 }
 
-get_auth_token_json = get_auth_token(base_url+auth_login_endpoint, auth_post_data)
-if get_auth_token_json['_result']['status'] == "ok":
-    api_sessionkey = get_auth_token_json['sessionkey']
-    logger.info("Sessionkey is: " + api_sessionkey)
-
 def request_track_report(endpoint, sessionkey, org_id, filter_cond={"$and":[]}):
     headers = {
         "Authorization": "Bearer " + sessionkey
@@ -133,7 +128,7 @@ def cal_credit_usage_stats(report_filename):
 
     return count_over_10
 
-def fetch_data(url, acc_org_id):
+def fetch_data(url, acc_org_id, api_sessionkey):
     headers = {
         "Authorization": "Bearer " + api_sessionkey
     }
@@ -175,9 +170,14 @@ def _get_stats_result():
         course_report_req_url = base_url+course_report_endpoint+params
         course_report_req_urls.append((course_report_req_url, account_org_id))
 
+    get_auth_token_json = get_auth_token(base_url+auth_login_endpoint, auth_post_data)
+    if get_auth_token_json['_result']['status'] == "ok":
+        api_sessionkey = get_auth_token_json['sessionkey']
+        logger.info("Sessionkey is: " + api_sessionkey)
+
     with concurrent.futures.ThreadPoolExecutor() as executor:
         # Submit API calls concurrently
-        futures = [executor.submit(fetch_data, url_info[0], url_info[1]) for url_info in course_report_req_urls]
+        futures = [executor.submit(fetch_data, url_info[0], url_info[1], api_sessionkey) for url_info in course_report_req_urls]
 
         # Wait for all results
         report_req_results = [future.result() for future in concurrent.futures.as_completed(futures)]
@@ -200,7 +200,7 @@ def _get_stats_result():
 
     credit_usages = {}
 
-    def _cal_credit_usage(report_req_result):
+    def _cal_credit_usage(report_req_result, api_sessionkey):
         if report_req_result[0] is not None:
             down_report_file_name = f"report_organization_{report_req_result[1]}_{formatted_now_date}.xlsx"
             report_blob_url = get_remote_file(remote_file_endpoint, api_sessionkey, report_req_result[0])
@@ -224,7 +224,7 @@ def _get_stats_result():
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
         # Submit API calls concurrently
-        futures = [executor.submit(_cal_credit_usage, result) for result in report_req_results]
+        futures = [executor.submit(_cal_credit_usage, result, api_sessionkey) for result in report_req_results]
 
         # Wait for all results
         credit_usage_results = [future.result() for future in concurrent.futures.as_completed(futures)]
@@ -284,8 +284,13 @@ if st.button("대시보드 활성화 ✅"):
         account_ids.append(lg_account['org_id'])
 
     arranged_credit_usages = []
+    lg_innotek_used_credits = 0
     for org_id in account_ids:
-        arranged_credit_usages.append(credit_usages[str(org_id)])
+        if org_id == 1038: # temp code to exclude lg innoteck used credit
+            lg_innotek_used_credits = credit_usages[str(org_id)]
+            arranged_credit_usages.append(0)
+        else:
+            arranged_credit_usages.append(credit_usages[str(org_id)])
 
     result_df = pd.DataFrame({
         "Account": account_names,
@@ -303,12 +308,14 @@ if st.button("대시보드 활성화 ✅"):
             current_credit = 0
             for credit in credit_usages.values():
                 current_credit += credit
+            current_credit = current_credit - lg_innotek_used_credits # temp code to exclude lg innoteck used credit
             st.metric(label="사용 크레딧/총 크레딧", value=f"{current_credit}/5,000")
 
             st.dataframe(result_df, use_container_width=True)
 
         with col2:
             st.subheader("그룹사 별 크레딧 사용현황")
+            st.caption("현재 LG 이노텍 사용 크레딧은 일시적으로 집계에 포함되어 있지 않습니다.")
             # num_account = len(lg_account_ids)
             # x_axis_names = [lg_account["name"] for lg_account in lg_account_ids.values()]
             # chart_data = pd.DataFrame(
