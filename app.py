@@ -27,7 +27,9 @@ lg_account_ids = {
     "lge-ai": {"name": "LG 전자", "org_id": 1034}, # LG 전자
     "farmhannong-ai": {"name": "팜한농", "org_id": 1039}, # 팜한농
     "lghv-ai": {"name": "LG 헬로비전", "org_id": 1037}, # LG헬로비전
-    "lgchem-airesearch": {"name": "LG 화학", "org_id": 1046} # LG 화학
+    "lgchem-airesearch": {"name": "LG 화학-AI", "org_id": 1046}, # LG 화학
+    "lgchem": {"name": "LG 화학", "org_id": 281}, # LG 화학 2 별도 과정
+    "hsad-ai": {"name": "LG HSAD", "org_id": 3551} # LG HSAD
 }
 
 base_url = "https://api-rest.elice.io"
@@ -118,6 +120,7 @@ def cal_credit_usage_stats(report_filename):
     logger.info(student_df.head())
 
     # dataframe 학습진행율 10%이상 필터링
+    # TODO: 이노텍 수강신청일 필터링 2월 1일~
     studnet_df = student_df.copy()
     student_df['학습진행률'] = student_df['학습진행률'].str.rstrip('%').astype('float') / 100.0
     filtered_df = student_df[student_df['학습진행률'] >= 0.1]
@@ -163,7 +166,8 @@ def _get_stats_result():
         account_org_id = lg_account_ids[key]['org_id']
         # if lg-innotek, change duration_filter_cond
         # 2023.12.01 ~ 2025.01.01 {"$and":[{"begin_datetime":1701356400000},{"end_datetime":1735657200000}]}
-        if account_org_id == 1038:
+        # TODO: 이노텍 23년 기정산 크레딧 제외 필요
+        if account_org_id == 1038: # 이노텍
             duration_filter_cond = json.dumps({"$and":[{"begin_datetime":1701356400000},
                                                        {"end_datetime":1735657200000}]})
         params = f"?organization_id={account_org_id}&filter_conditions={duration_filter_cond}"
@@ -288,6 +292,9 @@ if st.button("대시보드 활성화 ✅"):
     for org_id in account_ids:
         if org_id == 1038: # temp code to exclude lg innoteck used credit
             lg_innotek_used_credits = credit_usages[str(org_id)]
+            # lg 이노텍 수강신청일 덮어쓰기 데이터 작업 필요(최초 수강신청일 기준 2월 이후)
+            # lg_innotek_used_credits = credit_usages[str(org_id)] - 271 
+            # arranged_credit_usages.append(lg_innotek_used_credits)
             arranged_credit_usages.append(0)
         else:
             arranged_credit_usages.append(credit_usages[str(org_id)])
@@ -315,7 +322,9 @@ if st.button("대시보드 활성화 ✅"):
 
         with col2:
             st.subheader("그룹사 별 크레딧 사용현황")
-            st.caption("현재 LG 이노텍 사용 크레딧은 일시적으로 집계에 포함되어 있지 않습니다.")
+            # st.caption("LG 이노텍 사용 크레딧은 24년도 2월 1일 이후 수강신청 대상으로 집계되었습니다.")
+            st.caption("현재 LG 이노텍 사용 크레딧은 일시적으로 집계에 포함되어 있지 않으며, 4월 내 반영 예정입니다.")
+            st.caption("LG 화학 데이터 분석 중급 과정은 lgchem(LG 화학) 도메인에서 집계되었습니다.")
             # num_account = len(lg_account_ids)
             # x_axis_names = [lg_account["name"] for lg_account in lg_account_ids.values()]
             # chart_data = pd.DataFrame(
