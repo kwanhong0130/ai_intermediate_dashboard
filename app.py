@@ -295,7 +295,8 @@ if st.button("대시보드 활성화 ✅"):
             # lg 이노텍 수강신청일 덮어쓰기 데이터 작업 필요(최초 수강신청일 기준 2월 이후)
             # lg_innotek_used_credits = credit_usages[str(org_id)] - 271 
             # arranged_credit_usages.append(lg_innotek_used_credits)
-            arranged_credit_usages.append(0)
+            # arranged_credit_usages.append(0)
+            arranged_credit_usages.append(800)
         else:
             arranged_credit_usages.append(credit_usages[str(org_id)])
 
@@ -313,9 +314,11 @@ if st.button("대시보드 활성화 ✅"):
 
         with col1:
             current_credit = 0
-            for credit in credit_usages.values():
+            # for credit in credit_usages.values():
+                # current_credit += credit
+            for credit in arranged_credit_usages:
                 current_credit += credit
-            current_credit = current_credit - lg_innotek_used_credits # temp code to exclude lg innoteck used credit
+            # current_credit = current_credit - lg_innotek_used_credits # temp code to exclude lg innoteck used credit
             st.metric(label="사용 크레딧/총 크레딧", value=f"{current_credit}/5,000")
 
             st.dataframe(result_df, use_container_width=True)
@@ -323,8 +326,10 @@ if st.button("대시보드 활성화 ✅"):
         with col2:
             st.subheader("그룹사 별 크레딧 사용현황")
             # st.caption("LG 이노텍 사용 크레딧은 24년도 2월 1일 이후 수강신청 대상으로 집계되었습니다.")
-            st.caption("현재 LG 이노텍 사용 크레딧은 일시적으로 집계에 포함되어 있지 않으며, 4월 내 반영 예정입니다.")
+            # st.caption("현재 LG 이노텍 사용 크레딧은 일시적으로 집계에 포함되어 있지 않으며, 4월 내 반영 예정입니다.")
+            st.caption("LG 이노텍의 AI연구원 사용 크레딧 800개 소진 반영")
             st.caption("LG 화학 데이터 분석 중급 과정은 lgchem(LG 화학) 도메인에서 집계되었습니다.")
+            st.caption("LG 화학-엘리스 별도 콘텐츠 계약 건은 집계에서 제외되었습니다.")
             # num_account = len(lg_account_ids)
             # x_axis_names = [lg_account["name"] for lg_account in lg_account_ids.values()]
             # chart_data = pd.DataFrame(
