@@ -170,6 +170,9 @@ def _get_stats_result():
         if account_org_id == 1038: # 이노텍
             duration_filter_cond = json.dumps({"$and":[{"begin_datetime":1701356400000},
                                                        {"end_datetime":1735657200000}]})
+        elif account_org_id == 281: # 화학
+            duration_filter_cond = json.dumps({"$and":[{"begin_datetime":1701356400000},
+                                                       {"end_datetime":1738335600000}]})
         params = f"?organization_id={account_org_id}&filter_conditions={duration_filter_cond}"
         course_report_req_url = base_url+course_report_endpoint+params
         course_report_req_urls.append((course_report_req_url, account_org_id))
