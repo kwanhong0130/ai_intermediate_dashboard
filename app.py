@@ -117,13 +117,14 @@ def cal_credit_usage_stats(report_filename):
     logger.info(df.columns)
     # student_df = df[df['권한'] == 'student'] # 권한만료(nothing)도 필요?
     student_df = df[(df['권한'] == 'student') | (df['권한'] == 'nothing')]
-    logger.info(student_df.head())
+    student_elicer_filtered_df = student_df[~student_df["이메일"].str.contains("elicer.com", na=False)]
+    logger.info(student_elicer_filtered_df.head())
 
     # dataframe 학습진행율 10%이상 필터링
     # TODO: 이노텍 수강신청일 필터링 2월 1일~
-    studnet_df = student_df.copy()
-    student_df['학습진행률'] = student_df['학습진행률'].str.rstrip('%').astype('float') / 100.0
-    filtered_df = student_df[student_df['학습진행률'] >= 0.1]
+    student_elicer_filtered_df = student_elicer_filtered_df.copy()
+    student_elicer_filtered_df['학습진행률'] = student_elicer_filtered_df['학습진행률'].str.rstrip('%').astype('float') / 100.0
+    filtered_df = student_elicer_filtered_df[student_elicer_filtered_df['학습진행률'] >= 0.1]
     count_over_10 = len(filtered_df)
     logger.info(f"Number of records with learning percent over 10%: {count_over_10}")
 
@@ -171,7 +172,10 @@ def _get_stats_result():
             duration_filter_cond = json.dumps({"$and":[{"begin_datetime":1701356400000},
                                                        {"end_datetime":1735657200000}]})
         elif account_org_id == 281: # 화학
-            duration_filter_cond = json.dumps({"$and":[{"begin_datetime":1701356400000},
+            duration_filter_cond = json.dumps({"$and":[{"begin_datetime":1704034800000},
+                                                       {"end_datetime":1738335600000}]})
+        elif account_org_id == 1044: # 유플러스
+            duration_filter_cond = json.dumps({"$and":[{"begin_datetime":1704034800000},
                                                        {"end_datetime":1738335600000}]})
         params = f"?organization_id={account_org_id}&filter_conditions={duration_filter_cond}"
         course_report_req_url = base_url+course_report_endpoint+params
