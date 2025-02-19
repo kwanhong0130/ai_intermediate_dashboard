@@ -155,8 +155,9 @@ def fetch_data(url, acc_org_id, api_sessionkey):
 def _get_stats_result():
     # duration_filter_cond = json.dumps({"$and":[{"begin_datetime":1672498800000},
                                             #    {"end_datetime":1704034800000}]}) # 2023
-    duration_filter_cond = json.dumps({"$and":[{"begin_datetime":1704034800000},
-                                               {"end_datetime":1735657200000}]}) # 2024.01.01 ~ 2024.12.31
+    # duration_filter_cond = json.dumps({"$and":[{"begin_datetime":1704034800000},
+                                            #    {"end_datetime":1735657200000}]}) # 2024.01.01 ~ 2024.12.31
+    duration_filter_cond = json.dumps({"$and":[{"begin_datetime":1735657200000}]}) # 2025.01.01 ~                                        
     # report_download_token = request_track_report(course_report_endpoint, api_sessionkey, org_id,
                                                 #  filter_cond=duration_filter_cond)
     # logger.info("Download token is: " + report_download_token)
@@ -169,14 +170,17 @@ def _get_stats_result():
         # 2023.12.01 ~ 2025.01.01 {"$and":[{"begin_datetime":1701356400000},{"end_datetime":1735657200000}]}
         # TODO: 이노텍 23년 기정산 크레딧 제외 필요
         if account_org_id == 1038: # 이노텍
-            duration_filter_cond = json.dumps({"$and":[{"begin_datetime":1701356400000},
-                                                       {"end_datetime":1735657200000}]})
-        elif account_org_id == 281: # 화학
-            duration_filter_cond = json.dumps({"$and":[{"begin_datetime":1704034800000},
-                                                       {"end_datetime":1738335600000}]})
-        elif account_org_id == 1044: # 유플러스
-            duration_filter_cond = json.dumps({"$and":[{"begin_datetime":1704034800000},
-                                                       {"end_datetime":1738335600000}]})
+            duration_filter_cond = json.dumps({"$and":[{"begin_datetime":1734188400000}]})
+        # elif account_org_id == 281: # 화학
+            # duration_filter_cond = json.dumps({"$and":[{"begin_datetime":1704034800000},
+                                                    #    {"end_datetime":1738335600000}]})
+        # elif account_org_id == 1044: # 유플러스
+            # duration_filter_cond = json.dumps({"$and":[{"begin_datetime":1704034800000},
+                                                    #    {"end_datetime":1738335600000}]})
+        elif account_org_id == 1034: # LG전자
+            duration_filter_cond = json.dumps({"$and":[{"begin_datetime":1738335600000}]}) # 25.02.01~
+        elif account_org_id == 281: # LG화학
+            duration_filter_cond = json.dumps({"$and":[{"begin_datetime":1738335600000}]}) # 25.02.01~
         params = f"?organization_id={account_org_id}&filter_conditions={duration_filter_cond}"
         course_report_req_url = base_url+course_report_endpoint+params
         course_report_req_urls.append((course_report_req_url, account_org_id))
@@ -269,7 +273,7 @@ def _get_stats_result():
 
 
 st.set_page_config(
-    page_title = '2024 LG Intermediate Course 대시보드',
+    page_title = '2025 LG Intermediate Course 대시보드',
     page_icon = '📊',
     layout = 'wide'
 )
@@ -282,7 +286,7 @@ background-color: #A961DC; color:white;
 </style>""", unsafe_allow_html=True)
 
 # dashboard title
-st.title("2024 LG Intermediate Course 크레딧 대시보드")
+st.title("2025 LG Intermediate Course 크레딧 대시보드")
 
 if st.button("대시보드 활성화 ✅"): 
     st.session_state.disabled = True
@@ -301,9 +305,9 @@ if st.button("대시보드 활성화 ✅"):
             lg_innotek_used_credits = credit_usages[str(org_id)]
             # lg 이노텍 수강신청일 덮어쓰기 데이터 작업 필요(최초 수강신청일 기준 2월 이후)
             # lg_innotek_used_credits = credit_usages[str(org_id)] - 271 
-            # arranged_credit_usages.append(lg_innotek_used_credits)
+            arranged_credit_usages.append(lg_innotek_used_credits)
             # arranged_credit_usages.append(0)
-            arranged_credit_usages.append(800)
+            # arranged_credit_usages.append(800)
         else:
             arranged_credit_usages.append(credit_usages[str(org_id)])
 
@@ -334,9 +338,9 @@ if st.button("대시보드 활성화 ✅"):
             st.subheader("그룹사 별 크레딧 사용현황")
             # st.caption("LG 이노텍 사용 크레딧은 24년도 2월 1일 이후 수강신청 대상으로 집계되었습니다.")
             # st.caption("현재 LG 이노텍 사용 크레딧은 일시적으로 집계에 포함되어 있지 않으며, 4월 내 반영 예정입니다.")
-            st.caption("LG 이노텍의 AI연구원 사용 크레딧 800개 소진 반영")
-            st.caption("LG 화학 데이터 분석 중급 과정은 lgchem(LG 화학) 도메인에서 집계되었습니다.")
-            st.caption("LG 화학-엘리스 별도 콘텐츠 계약 건은 집계에서 제외되었습니다.")
+            # st.caption("LG 이노텍의 AI연구원 사용 크레딧 800개 소진 반영")
+            # st.caption("LG 화학 데이터 분석 중급 과정은 lgchem(LG 화학) 도메인에서 집계되었습니다.")
+            # st.caption("LG 화학-엘리스 별도 콘텐츠 계약 건은 집계에서 제외되었습니다.")
             # num_account = len(lg_account_ids)
             # x_axis_names = [lg_account["name"] for lg_account in lg_account_ids.values()]
             # chart_data = pd.DataFrame(
