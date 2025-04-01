@@ -206,7 +206,7 @@ def _get_stats_result():
     my_bar = st.progress(0, text=progress_text)
 
     for percent_complete in range(100):
-        time.sleep(0.2)
+        time.sleep(0.5)
         my_bar.progress(percent_complete + 1, text=progress_text)
 
     # down_report_file_name = f"report_organization_{org_id}_{formatted_now_date}.xlsx"
